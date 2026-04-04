@@ -1,3 +1,15 @@
+# Files
+## Set file immutable
+```sh
+chattr +i <file> # add immutable attribute
+
+# To change that file
+chattr -i <file> # make it mutable
+
+# Make file only appendable
+chattr +a <file>
+```
+
 # Packages
 ## Inspection
 ```sh
