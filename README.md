@@ -49,3 +49,65 @@ bcdboot C:\Windows /s S: /f UEFI
 ```
 
 Exit, reboot to boot menu
+
+# Kubernetes
+Test traffic in cluster
+```sh
+# Create a curl pod
+kubectl run -it --rm curltest -n monitoring --image=curlimages/curl:8.8.0 --restart=Never -- sh
+
+curl -vI http://<svc>.<namespace>.svc.cluster.local:<port>/<path>
+```
+
+# System
+
+## No grub menu time
+Modify file /etc/default/grub
+
+GRUB_TIMEOUT=0
+GRUB_TIMEOUT_STYLE=hidden
+
+## Create kvm
+Dependency: qemu-kvm libvirt-daemon-system virt-manager
+
+```sh
+# Add user to libvirt group
+sudo usermod -aG libvirt $USER
+
+# 
+sudo virt-manager
+```
+
+## Set swap to 16GB
+
+```sh
+sudo swapoff --all
+sudo rm -rf /swapfile
+sudo fallocate -l 16G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+# sudo echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+sudo swapon --show
+```
+
+## Config input device
+
+```sh
+# /etc/X11/xorg.conf/00-input.conf
+Section "InputClass"
+  Identifier "system-keyboard"
+  MatchIsKeyboard "true"
+  Option "XkbOptions" "caps:escape_shifted_capslock"
+EndSection
+
+Section "InputClass"
+        Identifier "Pointer"
+        MatchIsPointer "true"
+        #MatchIsTouchpad "true" #for laptop
+        Driver "libinput"
+        Option "LeftHanded" "true"
+        Option "Tapping" "true"
+        Option "NaturalScrolling" "true"
+EndSection
+```
