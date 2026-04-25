@@ -67,6 +67,47 @@ Modify file /etc/default/grub
 GRUB_TIMEOUT=0
 GRUB_TIMEOUT_STYLE=hidden
 
+## Target for suspend
+
+Change the power button action to `suspend-then-hibernate` in `/etc/systemd/logind.conf`.
+
+```ini
+[Login]
+HandlePowerKey=suspend-then-hibernate
+```
+
+Change the hibernate delay in `/etc/systemd/sleep.conf`.
+
+```ini
+[Sleep]
+HibernateDelaySec=30m
+```
+
+Apply the change:
+
+```sh
+# Restart logind after changing the power button action
+sudo systemctl restart systemd-logind
+
+# Optional: verify the configured values in drop-ins and main config
+sudo systemd-analyze cat-config systemd/logind.conf
+sudo systemd-analyze cat-config systemd/sleep.conf
+```
+
+Example output:
+
+```text
+# /etc/systemd/logind.conf
+[Login]
+HandlePowerKey=suspend-then-hibernate
+
+# /etc/systemd/sleep.conf
+[Sleep]
+HibernateDelaySec=30m
+```
+
+Note: `HibernateDelaySec=` is only used by `suspend-then-hibernate`.
+
 ## Create kvm
 Dependency: qemu-kvm libvirt-daemon-system virt-manager python3
 
@@ -79,7 +120,7 @@ sudo virt-manager
 ```
 
 ## Set swap to 16GB
-
+### Swap file (disk)
 ```sh
 sudo swapoff --all
 sudo rm -rf /swapfile
@@ -90,6 +131,48 @@ sudo swapon /swapfile
 # sudo echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
 sudo swapon --show
 ```
+
+### ZRAM (compressed RAM)
+
+On Debian/Ubuntu:
+
+```sh
+# Install zram generator
+sudo apt install systemd-zram-generator
+```
+
+Create `/etc/systemd/zram-generator.conf`:
+
+```ini
+[zram0]
+zram-size = ram / 2
+compression-algorithm = zstd
+swap-priority = 100
+```
+
+For a system with `30GB` RAM, `zram-size = ram / 2` gives about `15GB` of compressed swap.
+
+Start it:
+
+```sh
+# Reload systemd generators after adding the zram config
+sudo systemctl daemon-reexec
+
+# Start the zram swap device
+sudo systemctl start systemd-zram-setup@zram0
+
+# Verify zram swap is active
+swapon --show
+```
+
+Example output:
+
+```text
+NAME       TYPE      SIZE USED PRIO
+/dev/zram0 partition  15G   0B  100
+```
+
+Note: `compression-algorithm = zstd` requires kernel support for `zstd` in zram.
 
 ## Config input device
 
