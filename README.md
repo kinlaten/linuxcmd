@@ -195,6 +195,129 @@ Section "InputClass"
 EndSection
 ```
 
+# Systemd
+## Host container with podman
+
+Use Podman Quadlet by creating a `.container` file. `systemd` will turn it into a user service.
+
+1. Install Podman
+
+```sh
+# Update apt metadata
+
+sudo apt update
+
+# Install Podman
+
+sudo apt install podman
+```
+
+2. Create the data and Quadlet directories
+
+```sh
+# Create the Uptime Kuma data directory
+
+mkdir -p ~/.local/share/uptime-kuma
+
+# Create the user Quadlet directory
+
+mkdir -p ~/.config/containers/systemd
+```
+
+3. Create `~/.config/containers/systemd/uptime-kuma.container`
+
+```ini
+[Unit]
+Description=Uptime Kuma container
+
+[Container]
+Image=docker.io/louislam/uptime-kuma:latest
+ContainerName=uptime-kuma
+PublishPort=3001:3001
+Volume=%h/.local/share/uptime-kuma:/app/data:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+4. Reload the user `systemd` daemon
+
+```sh
+# Reload user services so Quadlet picks up the new container definition
+
+systemctl --user daemon-reload
+```
+
+5. Enable and start the service
+
+```sh
+# Start the container as a user service and enable it on login
+
+systemctl --user start uptime-kuma.service
+# enable keywork not work
+```
+
+
+Example output:
+
+```text
+Created symlink /home/ed/.config/systemd/user/default.target.wants/uptime-kuma.service -> /home/ed/.config/containers/systemd/uptime-kuma.container.
+```
+
+6. Check service and container status
+
+```sh
+# Show the user service status
+
+systemctl --user status uptime-kuma.service
+
+# List running Podman containers
+
+podman ps
+```
+
+Example output:
+
+```text
+● uptime-kuma.service - Uptime Kuma container
+     Loaded: loaded (/home/ed/.config/containers/systemd/uptime-kuma.container; generated)
+     Active: active (running)
+
+CONTAINER ID  IMAGE                                  COMMAND     CREATED         STATUS         PORTS                   NAMES
+4f3c9a2d5c61  docker.io/louislam/uptime-kuma:latest  /usr/bin/..  12 seconds ago  Up 12 seconds  0.0.0.0:3001->3001/tcp  uptime-kuma
+```
+
+Open `http://localhost:3001`.
+
+Important: keep it running after logout.
+
+```sh
+# Allow user services to keep running after you log out
+
+sudo loginctl enable-linger $USER
+```
+
+Useful commands:
+
+```sh
+# Follow the service logs
+
+journalctl --user -u uptime-kuma.service -f
+
+# Restart the service
+
+systemctl --user restart uptime-kuma.service
+
+# Stop the service
+
+systemctl --user stop uptime-kuma.service
+```
+
+For a server, I would usually place it behind a reverse proxy later, but this is the clean basic Quadlet setup.
+
 # Android debug bridge - adb, gradle
 ## Security
 
