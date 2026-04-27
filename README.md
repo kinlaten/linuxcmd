@@ -196,6 +196,32 @@ EndSection
 ```
 
 # Systemd
+## Boot to BIOS
+```sh
+# Reboot once directly into UEFI/BIOS setup.
+
+sudo systemctl reboot --firmware-setup
+```
+
+## Autoboot into a user, no login require
+For `lightdm`:
+
+```bash
+sudoedit /etc/lightdm/lightdm.conf
+```
+
+Add:
+
+```ini
+[Seat:*]
+autologin-user=ed
+autologin-user-timeout=0
+```
+
+Then:
+
+```bash
+sudo systemctl restart lightdm
 ## Host container with podman
 
 Use Podman Quadlet by creating a `.container` file. `systemd` will turn it into a user service.
