@@ -1,4 +1,4 @@
-# Bios boot time
+# Bios/Firmware boot time
 - Enable EXPO 1 to unlock CPU for RAM speed
 - Disable PXE/network boot
 - Enable Memory Context

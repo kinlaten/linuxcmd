@@ -28,6 +28,58 @@ dpkg-deb -I <NAME.deb>
 dpkg-deb -c <NAME.deb>          
 ```
 
+# Coreutils
+## `dd` use cases
+Use `dd` for low-level byte copying between files and block devices.
+
+- Clone a disk or partition into an image file
+- Write an ISO image to a USB drive
+- Create a file with a fixed size
+- Fill a file with zeroes for testing
+- Copy raw data with block-size control
+
+Examples:
+
+```sh
+# Create a 1 GiB file filled with zeroes
+dd if=/dev/zero of=test.img bs=1M count=1024 status=progress
+```
+
+```sh
+# Write an ISO image to a USB drive
+sudo dd if=debian.iso of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+```sh
+# Back up a full disk to an image file
+sudo dd if=/dev/sdX of=disk.img bs=64K status=progress
+```
+
+```sh
+# Restore a disk image back to a drive
+sudo dd if=disk.img of=/dev/sdX bs=64K status=progress conv=fsync
+```
+
+```sh
+# Create a zero-filled file until the filesystem is full
+dd if=/dev/zero of=zero.fill bs=1M status=progress
+rm zero.fill
+```
+
+Important options:
+
+- `if=` input file or device
+- `of=` output file or device
+- `bs=` block size
+- `count=` number of blocks to copy
+- `status=progress` show progress while copying
+- `conv=fsync` flush output before exit
+- `conv=noerror,sync` continue past read errors and pad bad blocks
+- `skip=` skip input blocks
+- `seek=` skip output blocks
+
+Warning: `dd` will overwrite exactly the target you give it. Double-check `of=` before running it. For damaged disks, prefer `ddrescue` instead of `dd`.
+
 # Windows Troubleshooting
 
 ## InitRamFs cannot detect Windows partition after reinstall linux partition
