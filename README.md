@@ -113,6 +113,102 @@ curl -vI http://<svc>.<namespace>.svc.cluster.local:<port>/<path>
 
 # System
 
+## Backup system with Timeshift on `ext4`
+
+For a desktop on `ext4`, use `Timeshift` in `rsync` mode. This is the practical choice when you want to back up the Linux system for rollback without restructuring disks for `LVM` snapshots.
+
+What this is good for:
+
+- backs up the OS, packages, boot files, and system configuration
+- works well on `ext4`
+- keeps restore simple on a desktop
+
+What this is not for:
+
+- not your main backup for personal files
+- not the lowest-overhead snapshot method
+
+Install it:
+
+```sh
+# Install Timeshift
+
+sudo apt install timeshift
+```
+
+Use `rsync` mode for `ext4`:
+
+```sh
+# Create an on-demand snapshot in rsync mode
+
+sudo timeshift --create --rsync --comments "before risky change" --scripted
+```
+
+List snapshots:
+
+```sh
+# List available snapshots
+
+sudo timeshift --list --rsync
+```
+
+Example output:
+
+```text
+Device : /dev/sdb1
+UUID   : 1234abcd-56ef-7890-abcd-1234567890ef
+Path   : /timeshift
+
+Num     Name                 Tags  Description
+------------------------------------------------------------------------------
+0    >  2026-04-29_20-15-42  O     before risky change
+```
+
+Keep it system-focused, not user-space:
+
+- in the GUI or config, keep home directories excluded unless you intentionally want hidden config files included
+- do not treat `Timeshift` as the only backup for `/home`
+- store snapshots on a separate disk or partition when possible
+
+The main config file is `/etc/timeshift/timeshift.json`.
+
+Example exclude/include idea:
+
+```
+{
+  "exclude": [
+    "/home/*/**",
+    "+ /root/**"
+  ]
+}
+```
+
+Restore a snapshot:
+
+```sh
+# Interactive restore of a selected snapshot
+
+sudo timeshift --restore --rsync
+```
+
+Restore a specific snapshot non-interactively:
+
+```sh
+# Replace the snapshot name and target with your values
+
+sudo timeshift --restore --rsync --snapshot '2026-04-29_20-15-42' --target /dev/sda2 --yes
+```
+
+If the system will not boot:
+
+1. Boot a live USB.
+2. Install or start `Timeshift` in the live environment.
+3. Mount the snapshot disk if needed.
+4. Run `sudo timeshift --restore` and select the target root partition.
+5. Reinstall `GRUB` during restore if the bootloader is damaged.
+
+Useful note: `Timeshift` snapshots are for system rollback. Use a separate backup tool for documents, media, and other personal data.
+
 ## No grub menu time
 Modify file /etc/default/grub
 
@@ -253,6 +349,59 @@ EndSection
 # Reboot once directly into UEFI/BIOS setup.
 
 sudo systemctl reboot --firmware-setup
+```
+
+## Keep journald logs across boots
+
+Set `Storage=persistent` in `/etc/systemd/journald.conf` so `journald` keeps logs from previous boots.
+
+```ini
+[Journal]
+Storage=persistent
+```
+
+List prior boots:
+
+```sh
+# Show boot indexes and boot IDs stored in the journal
+
+journalctl --list-boots
+```
+
+Example output:
+
+```text
+-1 a73415fade0e4e7f4bea60913883d180dc Fri 2016-02-26 15:01:25 UTC Fri 2016-02-26 15:05:16 UTC
+ 0 0c563fa3830047ecaa2d2b053d4e661d Fri 2016-02-26 15:11:03 UTC Fri 2016-02-26 15:12:28 UTC
+```
+
+Read logs from a prior boot by index or boot ID:
+
+```sh
+# Show logs from the previous boot
+
+journalctl -b -1
+
+# Show logs from a specific boot ID
+
+journalctl -b a73415fade0e4e7f4bea60913883d180dc
+```
+
+Filter logs to a specific `systemd` unit:
+
+```sh
+# Show logs only for the ntp service
+
+journalctl -u ntp
+```
+
+Example output:
+
+```text
+-- Logs begin at Fri 2016-02-26 15:11:03 UTC, end at Fri 2016-02-26 15:26:07 UTC. --
+Feb 26 15:11:07 ub-test-1 systemd[1]: Stopped LSB: Start NTP daemon.
+Feb 26 15:11:08 ub-test-1 systemd[1]: Starting LSB: Start NTP daemon...
+Feb 26 15:11:08 ub-test-1 ntp[761]: * Starting NTP server ntpd
 ```
 
 ## Autoboot into a user, no login require
