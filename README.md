@@ -209,6 +209,56 @@ If the system will not boot:
 
 Useful note: `Timeshift` snapshots are for system rollback. Use a separate backup tool for documents, media, and other personal data.
 
+### Timer recurring backup
+Use a oneshot service plus a timer.
+
+`/etc/systemd/system/timeshift-weekly.service`
+```ini
+[Unit]
+Description=Create weekly Timeshift snapshot
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/timeshift --create --rsync --scripted --tags W --comments "Weekly Saturday snapshot"
+```
+
+`/etc/systemd/system/timeshift-weekly.timer`
+```ini
+[Unit]
+Description=Run Timeshift every Saturday at 02:00
+
+[Timer]
+OnCalendar=Sat 02:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Then enable it:
+
+```sh
+# Reload unit files
+
+sudo systemctl daemon-reload
+
+# Enable and start the timer
+
+sudo systemctl enable --now timeshift-weekly.timer
+```
+
+Check it:
+
+```sh
+# Show when it will run next
+
+systemctl list-timers timeshift-weekly.timer
+
+# Show timer status
+
+systemctl status timeshift-weekly.timer
+```
+
 ## No grub menu time
 Modify file /etc/default/grub
 
