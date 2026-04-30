@@ -265,6 +265,161 @@ Modify file /etc/default/grub
 GRUB_TIMEOUT=0
 GRUB_TIMEOUT_STYLE=hidden
 
+## Change `sudo` password timeout
+
+On Debian, change the `sudo` credential cache timeout in `sudoers`.
+
+Edit it safely:
+
+```sh
+# Open sudoers in visudo
+
+sudo visudo
+```
+
+Add or update this line:
+
+```text
+Defaults timestamp_timeout=15
+```
+
+Useful values:
+
+- `15` keeps the default-style cache for 15 minutes
+- `0` asks for the password every time you run `sudo`
+- `-1` disables timeout expiration for the cache
+
+Example:
+
+```text
+Defaults timestamp_timeout=0
+```
+
+Note: on Debian, `sudo` typically uses a per-terminal timestamp, so commands from the same terminal reuse the cached authentication until the timeout expires.
+
+## Change default editor to `vim`
+
+On Debian, the usual system-wide way is to point the `editor` alternative to `vim`.
+
+Install `vim` if needed:
+
+```sh
+# Install vim
+
+sudo apt install vim
+```
+
+Select it as the default editor:
+
+```sh
+# Choose the command used by /usr/bin/editor
+
+sudo update-alternatives --config editor
+```
+
+Example output:
+
+```text
+There are 3 choices for the alternative editor (providing /usr/bin/editor).
+
+  Selection    Path            Priority   Status
+------------------------------------------------------------
+* 0            /usr/bin/nano    40        auto mode
+  1            /usr/bin/nano    40        manual mode
+  2            /usr/bin/vim.tiny 15       manual mode
+  3            /usr/bin/vim.basic 30      manual mode
+
+Press Enter to keep the current choice[*], or type selection number: 3
+```
+
+Optional: make your shell prefer `vim` too:
+
+```sh
+# Add to ~/.bashrc for user shell sessions
+
+export EDITOR=/usr/bin/vim
+export VISUAL=/usr/bin/vim
+```
+
+## Remap keys with `keyd`
+
+On Debian, `keyd` is a system-wide remapping daemon. It works across X11, Wayland, and TTY because it remaps keys below the desktop session layer.
+
+Install and enable it:
+
+```sh
+# Install keyd
+
+sudo apt install keyd
+
+# Enable and start the daemon
+
+sudo systemctl enable --now keyd
+```
+
+Put your config in `/etc/keyd/default.conf`.
+
+Example: swap left `Ctrl`, left `Alt`, and left `Super`, and make `CapsLock` act as `Esc` when tapped and `Control` when held. `Shift+CapsLock` stays normal `CapsLock`.
+
+```ini
+[ids]
+*
+
+[main]
+leftcontrol = leftalt
+leftalt = leftmeta
+leftmeta = leftcontrol
+capslock = overload(control, esc)
+
+[shift]
+capslock = capslock
+```
+
+Check and reload it:
+
+```sh
+# Validate the config
+
+sudo keyd.rvaiya check /etc/keyd/default.conf
+
+# Reload config without rebooting
+
+sudo keyd.rvaiya reload
+```
+
+Monitor keys to discover names and debug mappings:
+
+```sh
+# Show key presses and device IDs
+
+keyd.rvaiya monitor
+```
+
+Example output:
+
+```text
+DEVICE: 1452:832
+leftalt down
+leftalt up
+capslock down
+capslock up
+```
+
+Check logs if a config does not apply:
+
+```sh
+# Show recent keyd service logs
+
+sudo journalctl -eu keyd
+```
+
+Notes:
+
+- Debian provides the command as `keyd.rvaiya`
+- the main config path is `/etc/keyd/default.conf`
+- because `keyd` is system-wide, it is better than `xmodmap` for i3 and Wayland sessions
+- if you use `chezmoi`, track the source in your home directory and copy or symlink it into `/etc/keyd/default.conf`
+
 ## Target for suspend
 
 Change the power button action to `suspend-then-hibernate` in `/etc/systemd/logind.conf`.
