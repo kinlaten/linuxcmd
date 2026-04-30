@@ -420,6 +420,81 @@ Notes:
 - because `keyd` is system-wide, it is better than `xmodmap` for i3 and Wayland sessions
 - if you use `chezmoi`, track the source in your home directory and copy or symlink it into `/etc/keyd/default.conf`
 
+## Rotate logs with `logrotate`
+
+`logrotate` keeps log files from growing forever. It can rotate logs by time or size, compress old logs, keep only a fixed number of old files, and run a command after rotation.
+
+Common use cases:
+
+- rotate app logs such as `/var/log/myapp.log`
+- compress old logs to save disk space
+- keep only the last `N` rotated logs
+- reload a daemon after its log file is rotated
+
+On Debian, the main config is `/etc/logrotate.conf` and package or app snippets usually live in `/etc/logrotate.d/`.
+
+Basic example:
+
+```conf
+/var/log/myapp.log {
+    daily
+    rotate 7
+    compress
+    missingok
+    notifempty
+    create 0640 root adm
+}
+```
+
+Useful directives:
+
+- `daily`, `weekly`, `monthly`
+- `rotate 7` keeps 7 old logs
+- `compress` gzip-compresses old logs
+- `missingok` skips missing files without error
+- `notifempty` skips empty logs
+- `create 0640 root adm` creates a new empty log file after rotation
+- `size 100M` rotates when the file grows past `100 MB`
+- `copytruncate` is useful for apps that keep the file open and cannot reopen logs cleanly
+
+Example with service reload:
+
+```conf
+/var/log/nginx/*.log {
+    daily
+    rotate 14
+    compress
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+        systemctl reload nginx
+    endscript
+}
+```
+
+Test it safely:
+
+```sh
+# Dry run without making changes
+
+sudo logrotate --debug /etc/logrotate.conf
+
+# Show what a real run does
+
+sudo logrotate --verbose /etc/logrotate.conf
+
+# Force rotation now
+
+sudo logrotate --force /etc/logrotate.conf
+```
+
+Notes:
+
+- `logrotate` is usually run automatically by cron or `systemd`
+- use it for plain log files on disk
+- if a service already logs only to `journald`, you may not need `logrotate` for that service
+
 ## Target for suspend
 
 Change the power button action to `suspend-then-hibernate` in `/etc/systemd/logind.conf`.
@@ -565,6 +640,38 @@ Set `Storage=persistent` in `/etc/systemd/journald.conf` so `journald` keeps log
 Storage=persistent
 ```
 
+`journald` stores logs in:
+
+- persistent storage: `/var/log/journal/`
+- volatile storage: `/run/log/journal/`
+
+Default behavior:
+
+- if `/var/log/journal/` exists at boot, logs are kept persistently
+- otherwise `journald` uses `/run/log/journal/`, which is lost after reboot
+
+Create the persistent journal directory if needed:
+
+```sh
+# Create the persistent journal directory with correct ownership and modes
+
+sudo mkdir -p /var/log/journal
+sudo systemd-tmpfiles --create --prefix /var/log/journal
+sudo systemctl restart systemd-journald
+```
+
+Check where logs are stored and how much space they use:
+
+```sh
+# Show journal file locations
+
+ls -lah /var/log/journal /run/log/journal
+
+# Show total journal disk usage
+
+journalctl --disk-usage
+```
+
 List prior boots:
 
 ```sh
@@ -628,6 +735,8 @@ Then:
 
 ```bash
 sudo systemctl restart lightdm
+```
+
 ## Host container with podman
 
 Use Podman Quadlet by creating a `.container` file. `systemd` will turn it into a user service.
