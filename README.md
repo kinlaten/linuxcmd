@@ -1,10 +1,12 @@
 # Files
 ## Set file immutable
 ```sh
-chattr +i <file> # add immutable attribute
+# add immutable attribute
+chattr +i <file>
 
 # To change that file
-chattr -i <file> # make it mutable
+# make it mutable
+chattr -i <file>
 
 # Make file only appendable
 chattr +a <file>
@@ -90,13 +92,14 @@ Warning: `dd` will overwrite exactly the target you give it. Double-check `of=` 
 diskpart
 list vol
 
-sel vol X #(EFI)
+# (EFI)
+sel vol X
 assign letter=S
 
-sel vol Y #(Windows NTFS)
+# (Windows NTFS)
+sel vol Y
 assign letter=C
 # If there is other volume currently use letter C, use : sel vol Z -> remove letter=C
-
 bcdboot C:\Windows /s S: /f UEFI
 ```
 
@@ -132,7 +135,6 @@ Install it:
 
 ```sh
 # Install Timeshift
-
 sudo apt install timeshift
 ```
 
@@ -140,7 +142,6 @@ Use `rsync` mode for `ext4`:
 
 ```sh
 # Create an on-demand snapshot in rsync mode
-
 sudo timeshift --create --rsync --comments "before risky change" --scripted
 ```
 
@@ -148,7 +149,6 @@ List snapshots:
 
 ```sh
 # List available snapshots
-
 sudo timeshift --list --rsync
 ```
 
@@ -187,7 +187,6 @@ Restore a snapshot:
 
 ```sh
 # Interactive restore of a selected snapshot
-
 sudo timeshift --restore --rsync
 ```
 
@@ -195,7 +194,6 @@ Restore a specific snapshot non-interactively:
 
 ```sh
 # Replace the snapshot name and target with your values
-
 sudo timeshift --restore --rsync --snapshot '2026-04-29_20-15-42' --target /dev/sda2 --yes
 ```
 
@@ -239,11 +237,9 @@ Then enable it:
 
 ```sh
 # Reload unit files
-
 sudo systemctl daemon-reload
 
 # Enable and start the timer
-
 sudo systemctl enable --now timeshift-weekly.timer
 ```
 
@@ -251,11 +247,9 @@ Check it:
 
 ```sh
 # Show when it will run next
-
 systemctl list-timers timeshift-weekly.timer
 
 # Show timer status
-
 systemctl status timeshift-weekly.timer
 ```
 
@@ -273,7 +267,6 @@ Edit it safely:
 
 ```sh
 # Open sudoers in visudo
-
 sudo visudo
 ```
 
@@ -305,7 +298,6 @@ Install `vim` if needed:
 
 ```sh
 # Install vim
-
 sudo apt install vim
 ```
 
@@ -313,7 +305,6 @@ Select it as the default editor:
 
 ```sh
 # Choose the command used by /usr/bin/editor
-
 sudo update-alternatives --config editor
 ```
 
@@ -336,7 +327,6 @@ Optional: make your shell prefer `vim` too:
 
 ```sh
 # Add to ~/.bashrc for user shell sessions
-
 export EDITOR=/usr/bin/vim
 export VISUAL=/usr/bin/vim
 ```
@@ -349,11 +339,9 @@ Install and enable it:
 
 ```sh
 # Install keyd
-
 sudo apt install keyd
 
 # Enable and start the daemon
-
 sudo systemctl enable --now keyd
 ```
 
@@ -379,11 +367,9 @@ Check and reload it:
 
 ```sh
 # Validate the config
-
 sudo keyd.rvaiya check /etc/keyd/default.conf
 
 # Reload config without rebooting
-
 sudo keyd.rvaiya reload
 ```
 
@@ -391,7 +377,6 @@ Monitor keys to discover names and debug mappings:
 
 ```sh
 # Show key presses and device IDs
-
 keyd.rvaiya monitor
 ```
 
@@ -409,7 +394,6 @@ Check logs if a config does not apply:
 
 ```sh
 # Show recent keyd service logs
-
 sudo journalctl -eu keyd
 ```
 
@@ -477,15 +461,12 @@ Test it safely:
 
 ```sh
 # Dry run without making changes
-
 sudo logrotate --debug /etc/logrotate.conf
 
 # Show what a real run does
-
 sudo logrotate --verbose /etc/logrotate.conf
 
 # Force rotation now
-
 sudo logrotate --force /etc/logrotate.conf
 ```
 
@@ -627,7 +608,6 @@ EndSection
 ## Boot to BIOS
 ```sh
 # Reboot once directly into UEFI/BIOS setup.
-
 sudo systemctl reboot --firmware-setup
 ```
 
@@ -654,7 +634,6 @@ Create the persistent journal directory if needed:
 
 ```sh
 # Create the persistent journal directory with correct ownership and modes
-
 sudo mkdir -p /var/log/journal
 sudo systemd-tmpfiles --create --prefix /var/log/journal
 sudo systemctl restart systemd-journald
@@ -664,11 +643,9 @@ Check where logs are stored and how much space they use:
 
 ```sh
 # Show journal file locations
-
 ls -lah /var/log/journal /run/log/journal
 
 # Show total journal disk usage
-
 journalctl --disk-usage
 ```
 
@@ -676,7 +653,6 @@ List prior boots:
 
 ```sh
 # Show boot indexes and boot IDs stored in the journal
-
 journalctl --list-boots
 ```
 
@@ -691,11 +667,9 @@ Read logs from a prior boot by index or boot ID:
 
 ```sh
 # Show logs from the previous boot
-
 journalctl -b -1
 
 # Show logs from a specific boot ID
-
 journalctl -b a73415fade0e4e7f4bea60913883d180dc
 ```
 
@@ -703,7 +677,6 @@ Filter logs to a specific `systemd` unit:
 
 ```sh
 # Show logs only for the ntp service
-
 journalctl -u ntp
 ```
 
@@ -715,6 +688,49 @@ Feb 26 15:11:07 ub-test-1 systemd[1]: Stopped LSB: Start NTP daemon.
 Feb 26 15:11:08 ub-test-1 systemd[1]: Starting LSB: Start NTP daemon...
 Feb 26 15:11:08 ub-test-1 ntp[761]: * Starting NTP server ntpd
 ```
+
+## AppArmor audit log search
+
+For AppArmor or audit troubleshooting:
+
+- use `ausearch` to search the audit log
+- use `auditctl` to check `auditd` status or audit rules, not as the main log search tool
+- use `journalctl` to search the journal
+- even if some audit events appear in the journal, `ausearch` is usually better for audit log work
+
+```sh
+# Search AppArmor-related audit events
+sudo ausearch -m AVC,USER_AVC,APPARMOR -ts recent
+
+# Check auditd status
+sudo auditctl -s
+
+# Search the journal for AppArmor messages
+sudo journalctl -g apparmor -b
+```
+
+Example output:
+
+```text
+----
+time->Fri May  1 10:14:21 2026
+type=APPARMOR msg=audit(1777605261.123:412): apparmor="DENIED" operation="open" class="file" profile="/usr/bin/foo" name="/etc/bar.conf" pid=1234 comm="foo" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+
+enabled 1
+failure 0
+pid 742
+rate_limit 0
+backlog_limit 8192
+lost 0
+backlog 0
+
+May 01 10:14:21 host kernel: audit: type=1400 audit(1777605261.123:412): apparmor="DENIED" operation="open" class="file" profile="/usr/bin/foo" name="/etc/bar.conf" pid=1234 comm="foo" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+```
+
+Note:
+
+- `ausearch` output is the better source when you want audit event details
+- `journalctl` is useful for quick correlation with the rest of the boot or service logs
 
 ## Autoboot into a user, no login require
 For `lightdm`:
@@ -745,11 +761,9 @@ Use Podman Quadlet by creating a `.container` file. `systemd` will turn it into 
 
 ```sh
 # Update apt metadata
-
 sudo apt update
 
 # Install Podman
-
 sudo apt install podman
 ```
 
@@ -757,11 +771,9 @@ sudo apt install podman
 
 ```sh
 # Create the Uptime Kuma data directory
-
 mkdir -p ~/.local/share/uptime-kuma
 
 # Create the user Quadlet directory
-
 mkdir -p ~/.config/containers/systemd
 ```
 
@@ -788,7 +800,6 @@ WantedBy=default.target
 
 ```sh
 # Reload user services so Quadlet picks up the new container definition
-
 systemctl --user daemon-reload
 ```
 
@@ -796,7 +807,6 @@ systemctl --user daemon-reload
 
 ```sh
 # Start the container as a user service and enable it on login
-
 systemctl --user start uptime-kuma.service
 # enable keywork not work
 ```
@@ -812,11 +822,9 @@ Created symlink /home/ed/.config/systemd/user/default.target.wants/uptime-kuma.s
 
 ```sh
 # Show the user service status
-
 systemctl --user status uptime-kuma.service
 
 # List running Podman containers
-
 podman ps
 ```
 
@@ -837,7 +845,6 @@ Important: keep it running after logout.
 
 ```sh
 # Allow user services to keep running after you log out
-
 sudo loginctl enable-linger $USER
 ```
 
@@ -845,15 +852,12 @@ Useful commands:
 
 ```sh
 # Follow the service logs
-
 journalctl --user -u uptime-kuma.service -f
 
 # Restart the service
-
 systemctl --user restart uptime-kuma.service
 
 # Stop the service
-
 systemctl --user stop uptime-kuma.service
 ```
 
@@ -932,7 +936,6 @@ Use this when a button is off-screen, hard to reach, or easier to locate from th
 
 ```sh
 # Confirm the device screen size
-
 adb shell wm size
 ```
 
@@ -946,7 +949,6 @@ The first number is the width and the second number is the height. On a `1080x24
 
 ```sh
 # Swipe upward to reveal lower content
-
 adb shell input swipe 500 1800 500 500 500
 ```
 
@@ -962,7 +964,6 @@ If the button is visible, tap it by coordinates:
 
 ```sh
 # Tap a visible button by screen coordinates
-
 adb shell input tap X Y
 ```
 
@@ -970,7 +971,6 @@ Example for a bottom button on a `1080x2400` device:
 
 ```sh
 # Tap near the lower center of the screen
-
 adb shell input tap 540 2200
 ```
 
@@ -984,7 +984,6 @@ For a more reliable method, dump the UI hierarchy and search for likely button t
 
 ```sh
 # Dump the current UI hierarchy to the device
-
 adb shell uiautomator dump /sdcard/window.xml
 ```
 
@@ -996,7 +995,6 @@ UI hierarchy dumped to: /sdcard/window.xml
 
 ```sh
 # Pull the UI hierarchy file to the local machine
-
 adb pull /sdcard/window.xml /tmp/window.xml
 ```
 
@@ -1008,7 +1006,6 @@ Example output:
 
 ```sh
 # Search for common button text in the UI hierarchy
-
 grep -i -E "accept|terms|agree|continue" /tmp/window.xml
 ```
 
@@ -1022,7 +1019,6 @@ The `bounds` value is `[left,top][right,bottom]`. Tap the center point of the bo
 
 ```sh
 # Tap the center of the detected button bounds
-
 adb shell input tap 540 2085
 ```
 
@@ -1036,7 +1032,6 @@ If the screen supports keyboard or DPAD focus, try moving focus and pressing ent
 
 ```sh
 # Move focus forward and press enter
-
 adb shell input keyevent KEYCODE_TAB
 adb shell input keyevent KEYCODE_TAB
 adb shell input keyevent KEYCODE_ENTER
@@ -1052,7 +1047,6 @@ Alternative DPAD navigation:
 
 ```sh
 # Move focus down and select the focused item
-
 adb shell input keyevent KEYCODE_DPAD_DOWN
 adb shell input keyevent KEYCODE_DPAD_DOWN
 adb shell input keyevent KEYCODE_DPAD_CENTER
@@ -1068,7 +1062,6 @@ Fast sequence:
 
 ```sh
 # Swipe up, dump the UI tree, pull it locally, and search for the target button
-
 adb shell input swipe 500 1800 500 500 500
 adb shell uiautomator dump /sdcard/window.xml
 adb pull /sdcard/window.xml /tmp/window.xml
