@@ -1,4 +1,87 @@
 # Files
+## Prepare PDF for A4 printing with `ghostscript`
+
+`gs` (`Ghostscript`) is very good at rewriting PDFs for printing, resizing pages, rasterizing pages, and doing batch document conversions.
+
+Fit an existing PDF to A4 and write a new PDF:
+
+```sh
+# Rewrite a PDF so pages are fitted to A4
+
+/usr/bin/gs \
+  -o "Cloud-FinOps-A4.pdf" \
+  -sDEVICE=pdfwrite \
+  -sPAPERSIZE=a4 \
+  -dFIXEDMEDIA \
+  -dPDFFitPage \
+  "Cloud FinOps{Fuller, Mike}(2023){105237891} libgen.li.pdf"
+```
+
+What the important flags do:
+
+- `-sDEVICE=pdfwrite` writes a new PDF
+- `-sPAPERSIZE=a4` sets the target paper size to A4
+- `-dFIXEDMEDIA` forces the output page size to the selected paper size
+- `-dPDFFitPage` scales each page to fit the target size
+- `-o output.pdf` is short for setting the output file and running in batch mode
+
+This is useful when:
+
+- a PDF was made for `letter` paper and you want cleaner A4 printing
+- a scanned or oddly-sized PDF prints cropped on A4 printers
+- you want a separate print-friendly copy without editing the original
+
+Merge multiple PDFs into one:
+
+```sh
+# Combine several PDFs into one file
+
+gs -dBATCH -dNOPAUSE -sDEVICE=pdfwrite \
+  -sOutputFile=merged.pdf \
+  part1.pdf part2.pdf part3.pdf
+```
+
+Render a page to an image preview:
+
+```sh
+# Render only the first page to JPEG at 72 DPI
+
+gs -dBATCH -dNOPAUSE -dFirstPage=1 -dLastPage=1 \
+  -sDEVICE=jpeg -dJPEGQ=85 -r72 \
+  -sOutputFile=preview.jpg \
+  input.pdf
+```
+
+Other things `gs` does very well:
+
+- rewrite or normalize broken or awkward PDFs for printing
+- convert PDF or PostScript to raster images such as `png`, `jpeg`, or `tiff`
+- merge many PDFs into one output file
+- make grayscale print copies
+- generate lower-resolution previews or thumbnails
+- convert PostScript to PDF and PDF to PostScript for old print workflows
+
+Common strong use cases:
+
+- printer-friendly copy of a PDF for A4 or letter paper
+- preview image generation for documents
+- preparing PDFs for office printers that dislike unusual page boxes or embedded content
+- batch conversion of PostScript or PDF documents
+
+Niche but useful cases:
+
+- producing `tiffg4` output for fax-like workflows
+- generating separations or print-oriented intermediate files for legacy prepress tools
+- rendering pages to exact raster sizes for OCR or downstream image pipelines
+
+Check available devices and general usage:
+
+```sh
+# Show supported output devices and common switches
+
+gs -h
+```
+
 ## Set file immutable
 ```sh
 # add immutable attribute
