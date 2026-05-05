@@ -606,6 +606,120 @@ Notes:
 - use it for plain log files on disk
 - if a service already logs only to `journald`, you may not need `logrotate` for that service
 
+## Mount a remote filesystem with `sshfs`
+
+Use `sshfs` when you want to mount a remote directory over SSH and browse it like a local filesystem.
+
+Basic mount:
+
+```sh
+# Create a mountpoint and make it owned by your user
+
+sudo mkdir -p /mnt/shared_data
+sudo chown "$USER:$USER" /mnt/shared_data
+
+# Mount a remote directory (hp-home is configured in ~/.ssh)
+sshfs hp-home:/mnt/zen_data /mnt/shared_data
+```
+
+If you get `fusermount3: user has no write access to mountpoint`, the mountpoint is usually owned by `root` and must be owned by the user running `sshfs`.
+
+Unmount it:
+
+```sh
+# Unmount an sshfs mount
+
+fusermount3 -u /mnt/shared_data
+```
+
+Useful options:
+
+- `-o reconnect` reconnect automatically if the SSH session drops
+- `-o IdentityFile=/home/ed/.ssh/zenkin-cluster` uses a specific SSH key
+- `-o allow_other` lets other local users access the mount
+- `-o default_permissions` enables local permission checks, useful with `allow_other`
+
+Example with common options:
+
+```sh
+# Mount with reconnect and a specific SSH key
+
+sshfs hp-home:/mnt/zen_data /mnt/shared_data \
+  -o reconnect \
+  -o IdentityFile=/home/ed/.ssh/zenkin-cluster
+```
+
+To keep this persistent after boot, use system `systemd` `.mount` and `.automount` units.
+
+Note:
+
+- `After=network-online.target` and `Wants=network-online.target` belong on the `.mount` unit, not the `.automount` unit
+- `.automount` is useful so boot does not block waiting for the remote host
+- for `/mnt/shared_data`, the unit names must match the path:
+  `mnt-shared_data.mount` and `mnt-shared_data.automount`
+
+Create `/etc/systemd/system/mnt-shared_data.mount`:
+```ini
+[Unit]
+Description=SSHFS mount for /mnt/zen_data from hp-home
+Wants=network-online.target
+After=network-online.target
+
+[Mount]
+What=hp-home:/mnt/zen_data
+Where=/mnt/shared_data
+Type=fuse.sshfs
+Options=IdentityFile=/home/ed/.ssh/zenkin-cluster,reconnect,_netdev
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Create `/etc/systemd/system/mnt-shared_data.automount`:
+```ini
+[Unit]
+Description=Automount for /mnt/shared_data
+
+[Automount]
+Where=/mnt/shared_data
+TimeoutIdleSec=10min
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable it:
+
+```sh
+# Reload systemd after adding the unit files
+
+sudo systemctl daemon-reload
+
+# Enable and start the automount unit
+
+sudo systemctl enable --now mnt-shared_data.automount
+```
+
+Test it:
+
+```sh
+# Accessing the directory should trigger the mount
+
+ls /mnt/shared_data
+
+# Check automount and mount status
+
+systemctl status mnt-shared_data.automount
+systemctl status mnt-shared_data.mount
+```
+
+Notes:
+
+- using a mountpoint under your home directory is simpler, but system mount units are clearer when you want a system-managed automount
+- if you use `allow_other`, you will usually also want `default_permissions`
+- if the remote host is not reachable during boot, `.automount` is safer than mounting immediately
+- if your SSH key requires a passphrase, the system mount may need a non-interactive key setup to succeed automatically
+
 ## Target for suspend
 
 Change the power button action to `suspend-then-hibernate` in `/etc/systemd/logind.conf`.
