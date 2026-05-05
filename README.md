@@ -199,6 +199,53 @@ curl -vI http://<svc>.<namespace>.svc.cluster.local:<port>/<path>
 
 # System
 
+## Check laptop battery
+
+Use `/sys/class/power_supply` first. It is simple and already available on a normal Linux system.
+
+```sh
+# List power devices to find the battery name
+ls /sys/class/power_supply
+
+# Show battery percent
+cat /sys/class/power_supply/BAT0/capacity
+
+# Show charging status
+cat /sys/class/power_supply/BAT0/status
+```
+
+Example output:
+
+```text
+ACAD  BAT0
+84
+Discharging
+```
+
+Note:
+
+- common battery names are `BAT0` or `BAT1`
+- if `BAT0` does not exist, check the name from `ls /sys/class/power_supply`
+
+If `upower` is already installed on the desktop image, it gives a fuller summary:
+
+```sh
+# List power devices
+upower -e
+
+# Show battery details
+upower -i /org/freedesktop/UPower/devices/battery_BAT0
+```
+
+Example output:
+
+```text
+  native-path:          BAT0
+  state:                discharging
+  percentage:           84%
+  time to empty:        3.8 hours
+```
+
 ## Backup system with Timeshift on `ext4`
 
 For a desktop on `ext4`, use `Timeshift` in `rsync` mode. This is the practical choice when you want to back up the Linux system for rollback without restructuring disks for `LVM` snapshots.
