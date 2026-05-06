@@ -188,6 +188,43 @@ bcdboot C:\Windows /s S: /f UEFI
 
 Exit, reboot to boot menu
 
+# Networking
+
+## Tailscale SSH hangs on restrictive network
+
+If SSH to a home machine over Tailscale hangs or freezes during connect on some networks, the path MTU may be too large for that network.
+
+Lower the MTU on `tailscale0`:
+
+```sh
+# Lower Tailscale MTU for restrictive networks
+sudo ip link set dev tailscale0 mtu 1150
+```
+
+Check it:
+
+```sh
+# Show the current Tailscale MTU
+ip link show tailscale0
+```
+
+Example output:
+
+```text
+5: tailscale0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1150 qdisc fq_codel state UNKNOWN mode DEFAULT group default qlen 500
+```
+
+Why this helps:
+
+- some networks drop or mishandle larger packets
+- Tailscale adds encapsulation overhead, so the usable payload is smaller than the physical interface MTU
+- SSH may appear to connect and then freeze when larger packets or tunnel traffic start flowing
+
+Note:
+
+- this changes the MTU only until the interface is recreated or the machine reboots
+- if `mtu 1280` or `1150` works but the default does not, the problem is likely PMTU or packet filtering on that network
+
 # Kubernetes
 Test traffic in cluster
 ```sh
