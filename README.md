@@ -235,6 +235,13 @@ curl -vI http://<svc>.<namespace>.svc.cluster.local:<port>/<path>
 ```
 
 # System
+## Bios/Firmware boot time
+To make boot process faster at firmware
+
+- Enable EXPO 1 to unlock CPU for RAM speed
+- Disable PXE/network boot
+- Enable Memory Context
+- Enable Power Down
 
 ## Check laptop battery
 
