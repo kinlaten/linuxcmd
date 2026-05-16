@@ -966,6 +966,13 @@ Monitor effectiveness with `zramctl`. The useful columns are:
 - `COMPR`: compressed size in RAM
 - `TOTAL`: actual memory used including metadata
 
+To remove zram swap, remove the unit file and following cmd:
+
+```sh
+sudo swapoff /dev/zram0
+echo 1 | sudo tee /sys/block/zram0/reset
+```
+
 ## Config input device
 
 ```sh
