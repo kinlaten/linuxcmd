@@ -830,7 +830,7 @@ sudo swapon --show
 ```
 
 ### ZRAM (compressed RAM)
-
+#### Use systemd operator
 On Debian/Ubuntu:
 
 ```sh
@@ -870,6 +870,101 @@ NAME       TYPE      SIZE USED PRIO
 ```
 
 Note: `compression-algorithm = zstd` requires kernel support for `zstd` in zram.
+
+#### Manually setup by `zramctl`
+
+Use manual setup when the `systemd-zram-generator` package is not available
+
+Check first:
+
+```sh
+# Look for zram-related packages
+dnf search zram
+dnf provides '*zram*'
+```
+
+If the generator package is missing, create zram swap directly with the kernel interface.
+
+One-shot setup example for `8GB` zram swap:
+
+```sh
+# Load the zram kernel module
+sudo modprobe zram
+
+# Optional: see available compression algorithms
+cat /sys/block/zram0/comp_algorithm
+
+# Set compression before enabling the device
+echo zstd | sudo tee /sys/block/zram0/comp_algorithm
+
+# Create an 8G zram device
+echo 8G | sudo tee /sys/block/zram0/disksize
+
+# Format and enable it as swap
+sudo mkswap /dev/zram0
+sudo swapon -p 100 /dev/zram0
+
+# Verify
+swapon --show
+zramctl
+```
+
+Compression algorithm:
+
+- `lzo-rle` is a common default and is fine
+- `zstd` is usually the best overall choice for desktops, laptops, browsers, IDEs, containers, and heavy multitasking
+- `lz4` is a good choice when CPU overhead matters more than compression ratio
+
+If you want to change the algorithm later, do it before recreating swap:
+
+```sh
+# Disable and reset the current zram device
+sudo swapoff /dev/zram0
+echo 1 | sudo tee /sys/block/zram0/reset
+
+# Set a new algorithm and recreate the device
+echo zstd | sudo tee /sys/block/zram0/comp_algorithm
+echo 8G | sudo tee /sys/block/zram0/disksize
+sudo mkswap /dev/zram0
+sudo swapon -p 100 /dev/zram0
+```
+
+To make manual zram setup persistent, use a oneshot systemd service.
+
+`/etc/systemd/system/zram.service`
+
+```ini
+[Unit]
+Description=Setup zram swap
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/modprobe zram
+ExecStart=/bin/sh -c 'echo zstd > /sys/block/zram0/comp_algorithm'
+ExecStart=/bin/sh -c 'echo 8G > /sys/block/zram0/disksize'
+ExecStart=/usr/sbin/mkswap /dev/zram0
+ExecStart=/usr/sbin/swapon -p 100 /dev/zram0
+ExecStop=/usr/sbin/swapoff /dev/zram0
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable it:
+
+```sh
+# Reload units and start the persistent zram service
+sudo systemctl daemon-reload
+sudo systemctl enable --now zram.service
+```
+
+Monitor effectiveness with `zramctl`. The useful columns are:
+
+- `DATA`: logical data stored in zram
+- `COMPR`: compressed size in RAM
+- `TOTAL`: actual memory used including metadata
 
 ## Config input device
 
