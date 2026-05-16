@@ -235,6 +235,57 @@ curl -vI http://<svc>.<namespace>.svc.cluster.local:<port>/<path>
 ```
 
 # System
+## TTY font
+Available fonts at `/usr/lib/kbd/consolefonts/`.
+
+```sh
+# Temporary change for the current TTY session
+
+sudo setfont <file>
+```
+
+This is not persistent. It only affects the current virtual console session.
+
+On Debian/Ubuntu, make it persistent with `console-setup`:
+
+```sh
+# Interactive persistent setup
+
+sudo dpkg-reconfigure console-setup
+
+# Apply without reboot
+
+sudo setupcon
+```
+
+Or edit the config directly:
+
+`/etc/default/console-setup`
+
+```ini
+CHARMAP="UTF-8"
+CODESET="Lat15"
+FONTFACE="Terminus"
+FONTSIZE="16x32"
+```
+
+On RHEL-based systems such as RHEL, Rocky, Alma, and Fedora, use `/etc/vconsole.conf`:
+
+`/etc/vconsole.conf`
+
+```ini
+KEYMAP=us
+FONT=latarcyrheb-sun32
+```
+
+Apply it without reboot:
+
+```sh
+# Reload persistent console font settings on RHEL-based systems
+
+sudo systemctl restart systemd-vconsole-setup
+```
+
 ## Bios/Firmware boot time
 To make boot process faster at firmware
 
