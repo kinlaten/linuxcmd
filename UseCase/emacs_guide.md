@@ -33,6 +33,8 @@ Example:
 | `C-e` | end of line |
 | `M-<` | top of file |
 | `M->` | bottom of file |
+| `M-g M-g` | jump to line |
+
 
 These come from old terminal conventions and appear in many Linux shells too.
 
@@ -65,9 +67,23 @@ Emacs calls clipboard history the kill ring.
 | Key | Action |
 | --- | --- |
 | `C-/` | undo |
+| `C-x u` | undo |
+| `C-_` | undo |
 | `C-g` | cancel current command |
 
 `C-g` is extremely important. If Emacs feels stuck or confusing, press `C-g`.
+
+## Text editing
+
+| Key | Action |
+| --- | --- |
+| `C-o` | insert a blank line after the cursor |
+| `C-x C-o` | delete all but one of many consecutive blank lines |
+| `C-d` | delete the character after point |
+| `C-k` | kill to the end of the line |
+| `M-d` | kill forward to the end of the next word |
+| `M-DEL` | kill back to the beginning of the previous word |
+| `M-BACKSPACE` | kill back to the beginning of the previous word |
 
 ## Search
 
