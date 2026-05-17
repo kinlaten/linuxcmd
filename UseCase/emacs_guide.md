@@ -141,3 +141,25 @@ EWW is the built-in browser of Emacs.
 | `b` | add bookmark |
 | `B` | view bookmarks |
 | `H` | view browsing history |
+
+# Buffer
+Every open window is buffer, which persistent if not closed explicitly
+
+## Annote
+`C-x C-b` to open buffer list
+| Symbol | Meaning |
+| --- | --- |
+| `.` in `C` column | current buffer, the one active before opening the list |
+| `%` in `R` column | read-only buffer |
+| `*` in `M` column | modified buffer with unsaved changes |
+
+# Manage buffer by `ibuffer`
+
+| Key | Action |
+| --- | --- |
+| `M-x ibuffer` | open `ibuffer` |
+| `d` | mark for deletion, displays `D` |
+| `m` | mark for general action, displays `>` |
+| `u` | unmark current line |
+| `U` | unmark everything |
+| `t` | toggle marks, swap marked and unmarked |

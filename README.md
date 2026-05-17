@@ -235,6 +235,40 @@ curl -vI http://<svc>.<namespace>.svc.cluster.local:<port>/<path>
 ```
 
 # System
+## Kernel Logs levels
+
+Common syslog / journald priority levels:
+
+| Level | Name | Meaning | Example |
+| --- | --- | --- | --- |
+| `0` | Emergency | system is unusable | imminent system crash |
+| `1` | Alert | immediate action required | database corruption |
+| `2` | Critical | critical conditions | hardware failure |
+| `3` | Error | non-critical error conditions | failed to start a service |
+| `4` | Warning | warning conditions | nearing memory limits |
+| `5` | Notice | normal but significant | security-related notice |
+| `6` | Informational | general informational messages | successful user login |
+| `7` | Debug | debug-level messages | detailed function tracing |
+
+```sh
+#Check current setting
+cat /proc/sys/kernel/printk
+#
+# E.g. output: 4 4 1 7 (console/fallback/minimum/boot-time)
+
+#OR
+systemd-analyze log-level
+journalctl -o verbose -n 
+
+# Config log level
+# As usual, 4 4 1 7 is good option
+sudo sysctl -w kernel.printk="4 4 1 7"
+```
+
+See also:
+[systemd-log-level](https://man7.org/linux/man-pages/man1/systemd.1.html#ENVIRONMENT)
+[syslog](https://man7.org/linux/man-pages/man3/syslog.3.html)
+
 ## TTY font
 Available fonts at `/usr/lib/kbd/consolefonts/`.
 

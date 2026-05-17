@@ -10,6 +10,12 @@ Keep this repo easy to scan on the GitHub `README.md` page.
 
 ## Writing style
 
+## Section placement authority
+
+- If the user explicitly says to add content to a specific file or section, follow that exactly.
+- The user determines the outline and section placement when they specify it.
+- Only choose the location or section yourself when the user did not explicitly specify one.
+
 - Prefer `sh` code blocks with short `#` comments on the line above the command.
 - Keep notes simple, concise, and searchable.
 - Use short headings with obvious keywords.
