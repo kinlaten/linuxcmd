@@ -95,6 +95,52 @@ chattr -i <file>
 chattr +a <file>
 ```
 
+# Git
+## Rename remote branches carefully
+Goal:
+
+- `origin/main` -> `origin/use-framework`
+- `origin/HTML` -> `origin/main`
+
+Do it in this order:
+
+```sh
+# Update local remote-tracking refs
+git fetch origin
+
+# Create remote use-framework from current origin/main
+git push origin origin/main:refs/heads/use-framework
+
+# Create or overwrite remote main from current origin/HTML
+git push origin origin/HTML:refs/heads/main --force-with-lease
+```
+
+Then update local branches:
+
+```sh
+# Reset local main to the new remote main
+git switch main
+git reset --hard origin/main
+
+# Recreate local use-framework from remote
+git branch -D use-framework 2>/dev/null
+git switch -c use-framework origin/use-framework
+```
+
+Optional cleanup:
+
+```sh
+# Delete remote HTML after confirming everything is correct
+git push origin --delete HTML
+```
+
+Check result:
+
+```sh
+# Show remote branches
+git branch -r
+```
+
 # Packages
 ## Inspection
 ```sh

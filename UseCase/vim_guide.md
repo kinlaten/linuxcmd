@@ -27,3 +27,14 @@ To navigate between
 # Read file Markdown
 ## View outline
 Cmd `/^#` find headers
+
+# Command
+# Visual Block mode
+Assume want to add `left` and `right` to side of  
+```
+middle
+middle
+```
+
+:<block>normal I<contentAtHead> <Ctrl+v then Escape> A<contentAtTail>
+
