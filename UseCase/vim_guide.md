@@ -1,3 +1,6 @@
+# In Shell
+`set -o vi` turn vim mode in shell/bash, visual mode is powerful
+
 # File explorer
 `:Explore` or `:E` + location
 
@@ -37,4 +40,6 @@ middle
 ```
 
 :<block>normal I<contentAtHead> <Ctrl+v then Escape> A<contentAtTail>
+
+<Ctrl+v then Escape> is `^[` Escape in command mode
 
