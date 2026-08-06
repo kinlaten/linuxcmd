@@ -1061,21 +1061,29 @@ echo 1 | sudo tee /sys/block/zram0/reset
 ## Config input device
 
 ```sh
-# /etc/X11/xorg.conf/00-input.conf
+# /etc/X11/xorg.conf.d/00-input.conf
+
 Section "InputClass"
-  Identifier "system-keyboard"
-  MatchIsKeyboard "true"
-  Option "XkbOptions" "caps:escape_shifted_capslock"
+    Identifier "system-keyboard"
+    MatchIsKeyboard "true"
+    Option "XkbOptions" "caps:escape_shifted_capslock"
 EndSection
 
 Section "InputClass"
-        Identifier "Pointer"
-        MatchIsPointer "true"
-        #MatchIsTouchpad "true" #for laptop
-        Driver "libinput"
-        Option "LeftHanded" "true"
-        Option "Tapping" "true"
-        Option "NaturalScrolling" "true"
+    Identifier "touchpad"
+    MatchIsTouchpad "true"
+    Driver "libinput"
+    Option "Tapping" "true"
+    Option "NaturalScrolling" "true"
+    Option "LeftHanded" "true"
+EndSection
+
+Section "InputClass"
+    Identifier "mouse"
+    MatchIsPointer "true"
+    MatchIsTouchpad "false"
+    Driver "libinput"
+    Option "LeftHanded" "true"
 EndSection
 ```
 
